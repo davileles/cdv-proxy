@@ -350,15 +350,43 @@ function mergePartners(allData){
       if(p.ate)map[key].ate=true;
     }
   }
-  // calcula melhor programa usando pontos equivalentes
+  // calcula melhor programa:
+  // Livelo/Esfera são a referência — programas aéreos só vencem se superarem ambos pelo fator de equivalência
+  const BASE_PROGS = ['livelo','esfera'];
+  const AERIAL_PROGS = ['smiles','azul','latam'];
+
   return Object.values(map).map(p=>{
-    let bestEquiv=0,bestPts=0,bestProg=null;
-    for(const[pid,data] of Object.entries(p.programs)){
+    // 1. Melhor entre os programas base (Livelo/Esfera)
+    let bestBaseEquiv=0, bestBasePts=0, bestBaseProg=null;
+    for(const pid of BASE_PROGS){
+      const data=p.programs[pid];
+      if(!data) continue;
       const equiv=data.pts*(EQUIV[pid]||1);
-      if(equiv>bestEquiv){bestEquiv=equiv;bestPts=data.pts;bestProg=pid;}
-      else if(equiv===bestEquiv&&bestProg){bestProg='both';bestPts=Math.max(bestPts,data.pts);}
+      if(equiv>bestBaseEquiv){bestBaseEquiv=equiv;bestBasePts=data.pts;bestBaseProg=pid;}
+      else if(equiv===bestBaseEquiv&&bestBaseProg){bestBaseProg='both';bestBasePts=Math.max(bestBasePts,data.pts);}
     }
-    return {...p,bestPts,bestProg};
+
+    // 2. Verifica se algum aéreo supera a base
+    let bestAerialEquiv=0, bestAerialPts=0, bestAerialProg=null;
+    for(const pid of AERIAL_PROGS){
+      const data=p.programs[pid];
+      if(!data) continue;
+      const equiv=data.pts*(EQUIV[pid]||1);
+      if(equiv>bestAerialEquiv){bestAerialEquiv=equiv;bestAerialPts=data.pts;bestAerialProg=pid;}
+    }
+
+    // 3. Aéreo só vence se superar ESTRITAMENTE a base
+    if(bestAerialProg && bestAerialEquiv > bestBaseEquiv){
+      return {...p, bestPts:bestAerialPts, bestProg:bestAerialProg};
+    }
+
+    // 4. Caso contrário, usa o melhor da base (ou 'both' se empatados)
+    if(bestBaseProg){
+      return {...p, bestPts:bestBasePts, bestProg:bestBaseProg};
+    }
+
+    // 5. Fallback: só tem aéreos, usa o melhor
+    return {...p, bestPts:bestAerialPts||0, bestProg:bestAerialProg};
   });
 }
 
@@ -471,17 +499,34 @@ function pool(){
     if(activeProgs!==null&&!Object.keys(p.programs).some(pid=>activeProgs.has(pid)))return false;
     return true;
   });
-  // Recalcula bestProg/bestPts considerando apenas programas ativos
+  // Recalcula bestProg/bestPts considerando apenas programas ativos + regra base/aéreo
+  const BASE=['livelo','esfera'], AERIAL=['smiles','azul','latam'];
   return filtered.map(p=>{
-    const activeProgramEntries=activeProgs===null?Object.entries(p.programs):Object.entries(p.programs).filter(([pid])=>activeProgs.has(pid));
-    if(!activeProgramEntries.length) return p;
-    let bestEquiv=0,bestPts=0,bestProg=null;
-    for(const[pid,data] of activeProgramEntries){
-      const equiv=data.pts*(EQUIV[pid]||1);
-      if(equiv>bestEquiv){bestEquiv=equiv;bestPts=data.pts;bestProg=pid;}
-      else if(equiv===bestEquiv&&bestProg){bestProg='both';bestPts=Math.max(bestPts,data.pts);}
+    const activeEntries=activeProgs===null?Object.entries(p.programs):Object.entries(p.programs).filter(([pid])=>activeProgs.has(pid));
+    if(!activeEntries.length) return p;
+    const activeMap=Object.fromEntries(activeEntries);
+
+    // Melhor base
+    let bestBaseEquiv=0,bestBasePts=0,bestBaseProg=null;
+    for(const pid of BASE){
+      if(!activeMap[pid]) continue;
+      const eq=activeMap[pid].pts*(EQUIV[pid]||1);
+      if(eq>bestBaseEquiv){bestBaseEquiv=eq;bestBasePts=activeMap[pid].pts;bestBaseProg=pid;}
+      else if(eq===bestBaseEquiv&&bestBaseProg){bestBaseProg='both';bestBasePts=Math.max(bestBasePts,activeMap[pid].pts);}
     }
-    return {...p,bestPts,bestProg};
+
+    // Melhor aéreo
+    let bestAerialEquiv=0,bestAerialPts=0,bestAerialProg=null;
+    for(const pid of AERIAL){
+      if(!activeMap[pid]) continue;
+      const eq=activeMap[pid].pts*(EQUIV[pid]||1);
+      if(eq>bestAerialEquiv){bestAerialEquiv=eq;bestAerialPts=activeMap[pid].pts;bestAerialProg=pid;}
+    }
+
+    // Aéreo só vence se superar estritamente a base
+    if(bestAerialProg&&bestAerialEquiv>bestBaseEquiv) return {...p,bestPts:bestAerialPts,bestProg:bestAerialProg};
+    if(bestBaseProg) return {...p,bestPts:bestBasePts,bestProg:bestBaseProg};
+    return {...p,bestPts:bestAerialPts||0,bestProg:bestAerialProg};
   });
 }
 
