@@ -205,8 +205,7 @@
 
 <script>
 const PROXY = 'https://cdv-proxy-production.up.railway.app/fetch';
-const GITHUB_REPO = 'davileles/cdv-proxy'; // repo onde alertas.json está salvo
-const GITHUB_TOKEN = ''; // cole aqui seu GitHub token (scope: contents:write)
+// Alertas salvos via proxy Railway (token fica seguro no servidor)
 const PROGRAMS = [
   { id:'livelo',  name:'Livelo',      color:'#df0979', dim:'rgba(223,9,121,0.15)',
     url:'https://www.comparemania.com.br/lojas/pontos-milhas/programa-fidelidade-livelo' },
@@ -793,31 +792,31 @@ async function salvarAlerta(){
 
   if(!email||!email.includes('@')){fb.style.color='#f87171';fb.textContent='E-mail inválido.';return;}
   if(!minPts||minPts<1){fb.style.color='#f87171';fb.textContent='Informe a pontuação mínima.';return;}
-  if(!GITHUB_TOKEN){fb.style.color='#f87171';fb.textContent='GitHub token não configurado no painel.';return;}
 
   fb.style.color='var(--muted)';fb.textContent='Salvando…';
 
   try{
-    // Lê alertas.json atual do GitHub
-    const getRes=await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/alertas.json`,{
-      headers:{'Authorization':`Bearer ${GITHUB_TOKEN}`,'Accept':'application/vnd.github+json'}
+    // Envia para o proxy Railway — token GitHub fica seguro no servidor
+    const endpoint=PROXY.replace('/fetch','/alerta');
+    const res=await fetch(endpoint,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,parceiro:currentModalPartner,programa,minPts})
     });
-    const getData=await getRes.json();
-    const sha=getData.sha;
-    const alertas=JSON.parse(atob(getData.content.replace(/
-/g,'')));
-
-    // Verifica se já existe alerta igual
-    const existe=alertas.find(a=>a.email===email&&a.parceiro===currentModalPartner&&a.programa===programa);
-    if(existe){
-      // Atualiza pontuação mínima
-      existe.minPts=minPts;
+    const data=await res.json();
+    if(data.ok){
+      fb.style.color='#34d399';
+      fb.textContent='✓ Alerta salvo! Você receberá um email quando atingir '+minPts+' pts.';
+      document.getElementById('alerta-email').value='';
+      document.getElementById('alerta-min-pts').value='';
     } else {
-      alertas.push({
-        email, parceiro:currentModalPartner, programa, minPts,
-        criadoEm:new Date().toISOString()
-      });
+      fb.style.color='#f87171';fb.textContent='Erro: '+(data.erro||'falha ao salvar');
     }
+  }catch(e){
+    fb.style.color='#f87171';fb.textContent='Erro: '+e.message;
+    console.error(e);
+  }
+}
 
     // Salva de volta no GitHub
     const putRes=await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/alertas.json`,{
