@@ -818,31 +818,6 @@ async function salvarAlerta(){
   }
 }
 
-    // Salva de volta no GitHub
-    const putRes=await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/alertas.json`,{
-      method:'PUT',
-      headers:{'Authorization':`Bearer ${GITHUB_TOKEN}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-      body:JSON.stringify({
-        message:`chore: alerta de ${email} para ${currentModalPartner}`,
-        content:btoa(unescape(encodeURIComponent(JSON.stringify(alertas,null,2)))),
-        sha
-      })
-    });
-
-    if(putRes.ok){
-      fb.style.color='#34d399';
-      fb.textContent='✓ Alerta salvo! Você receberá um email quando atingir '+minPts+' pts.';
-      document.getElementById('alerta-email').value='';
-      document.getElementById('alerta-min-pts').value='';
-    } else {
-      const err=await putRes.json();
-      fb.style.color='#f87171';fb.textContent='Erro: '+(err.message||'falha ao salvar');
-    }
-  }catch(e){
-    fb.style.color='#f87171';fb.textContent='Erro: '+e.message;
-    console.error(e);
-  }
-}
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 // Event listeners separados por contexto para evitar conflitos
