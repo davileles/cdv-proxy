@@ -136,6 +136,14 @@
     select.srt{margin-left:0}
     .controls{top:72px}
   }
+  /* ── Alertas ── */
+  .modal-alert-form{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px}
+  .modal-alert-form label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+  .modal-alert-form input,.modal-alert-form select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:13px;padding:8px 10px;margin-bottom:10px;outline:none}
+  .modal-alert-form input:focus,.modal-alert-form select:focus{border-color:var(--cdv-coral)}
+  .btn-alerta{width:100%;padding:10px;background:transparent;border:1px solid rgba(255,88,94,.4);color:var(--cdv-coral);border-radius:8px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;margin-top:2px}
+  .btn-alerta:hover{background:rgba(255,88,94,.08)}
+  .alerta-fb{font-size:12px;font-weight:700;text-align:center;min-height:16px;margin-top:8px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -174,7 +182,20 @@
     <div class="modal-name" id="modal-name"></div>
     <div class="modal-cat" id="modal-cat"></div>
     <div class="modal-rows" id="modal-rows"></div>
-    <button class="modal-url" id="modal-hist-btn" onclick="toggleHistorico()">📈 Ver histórico</button>
+    <div style="display:flex;gap:8px;margin-top:14px">
+    <button class="modal-url" id="modal-hist-btn" onclick="toggleHistorico()" style="flex:1;margin-top:0">📈 Ver histórico</button>
+    <button class="modal-url" onclick="toggleAlerta()" style="flex:1;margin-top:0;border-color:rgba(52,211,153,.4);color:#34d399">🔔 Criar alerta</button>
+  </div>
+  <div id="modal-alerta-form" class="modal-alert-form" style="display:none">
+    <label>E-mail</label>
+    <input type="email" id="alerta-email" placeholder="seu@email.com"/>
+    <label>Programa</label>
+    <select id="alerta-programa"></select>
+    <label>Pontuação mínima (pts/R$)</label>
+    <input type="number" id="alerta-min-pts" placeholder="Ex: 10" min="1"/>
+    <button class="btn-alerta" onclick="salvarAlerta()">✓ Salvar alerta</button>
+    <div class="alerta-fb" id="alerta-fb"></div>
+  </div>
   <div id="modal-hist" style="display:none;margin-top:14px">
     <canvas id="hist-chart" style="width:100%;height:200px"></canvas>
     <div id="hist-empty" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:20px 0">Histórico ainda sendo construído — volte amanhã 📅</div>
@@ -184,6 +205,8 @@
 
 <script>
 const PROXY = 'https://cdv-proxy-production.up.railway.app/fetch';
+const GITHUB_REPO = 'davileles/cdv-proxy'; // repo onde alertas.json está salvo
+const GITHUB_TOKEN = ''; // cole aqui seu GitHub token (scope: contents:write)
 const PROGRAMS = [
   { id:'livelo',  name:'Livelo',      color:'#df0979', dim:'rgba(223,9,121,0.15)',
     url:'https://www.comparemania.com.br/lojas/pontos-milhas/programa-fidelidade-livelo' },
@@ -571,8 +594,12 @@ async function openModal(name){
   const p=partners.find(x=>x.name===name);
   if(!p)return;
 
-  // Reset histórico ao abrir novo parceiro
+  // Reset ao abrir novo parceiro
   currentModalPartner=name;
+  const alertForm=document.getElementById('modal-alerta-form');
+  if(alertForm){alertForm.style.display='none';}
+  const alertFb=document.getElementById('alerta-fb');
+  if(alertFb){alertFb.textContent='';}
   const histDiv=document.getElementById('modal-hist');
   const histBtn=document.getElementById('modal-hist-btn');
   if(histDiv){histDiv.style.display='none';}
@@ -738,6 +765,84 @@ function renderHistChart(partnerName){
       }
     }
   });
+}
+
+// ─── Sistema de Alertas ───────────────────────────────────────────────────────
+function toggleAlerta(){
+  const form=document.getElementById('modal-alerta-form');
+  const isOpen=form.style.display!=='none';
+  form.style.display=isOpen?'none':'block';
+  if(!isOpen) preencherSelectPrograma();
+}
+
+function preencherSelectPrograma(){
+  const p=partners.find(x=>x.name===currentModalPartner);
+  if(!p) return;
+  const sel=document.getElementById('alerta-programa');
+  sel.innerHTML=Object.keys(p.programs).map(pid=>{
+    const prog=PROGRAMS.find(x=>x.id===pid);
+    return `<option value="${pid}">${prog?prog.name:pid}</option>`;
+  }).join('');
+}
+
+async function salvarAlerta(){
+  const email=document.getElementById('alerta-email').value.trim();
+  const programa=document.getElementById('alerta-programa').value;
+  const minPts=parseInt(document.getElementById('alerta-min-pts').value);
+  const fb=document.getElementById('alerta-fb');
+
+  if(!email||!email.includes('@')){fb.style.color='#f87171';fb.textContent='E-mail inválido.';return;}
+  if(!minPts||minPts<1){fb.style.color='#f87171';fb.textContent='Informe a pontuação mínima.';return;}
+  if(!GITHUB_TOKEN){fb.style.color='#f87171';fb.textContent='GitHub token não configurado no painel.';return;}
+
+  fb.style.color='var(--muted)';fb.textContent='Salvando…';
+
+  try{
+    // Lê alertas.json atual do GitHub
+    const getRes=await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/alertas.json`,{
+      headers:{'Authorization':`Bearer ${GITHUB_TOKEN}`,'Accept':'application/vnd.github+json'}
+    });
+    const getData=await getRes.json();
+    const sha=getData.sha;
+    const alertas=JSON.parse(atob(getData.content.replace(/
+/g,'')));
+
+    // Verifica se já existe alerta igual
+    const existe=alertas.find(a=>a.email===email&&a.parceiro===currentModalPartner&&a.programa===programa);
+    if(existe){
+      // Atualiza pontuação mínima
+      existe.minPts=minPts;
+    } else {
+      alertas.push({
+        email, parceiro:currentModalPartner, programa, minPts,
+        criadoEm:new Date().toISOString()
+      });
+    }
+
+    // Salva de volta no GitHub
+    const putRes=await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/alertas.json`,{
+      method:'PUT',
+      headers:{'Authorization':`Bearer ${GITHUB_TOKEN}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify({
+        message:`chore: alerta de ${email} para ${currentModalPartner}`,
+        content:btoa(unescape(encodeURIComponent(JSON.stringify(alertas,null,2)))),
+        sha
+      })
+    });
+
+    if(putRes.ok){
+      fb.style.color='#34d399';
+      fb.textContent='✓ Alerta salvo! Você receberá um email quando atingir '+minPts+' pts.';
+      document.getElementById('alerta-email').value='';
+      document.getElementById('alerta-min-pts').value='';
+    } else {
+      const err=await putRes.json();
+      fb.style.color='#f87171';fb.textContent='Erro: '+(err.message||'falha ao salvar');
+    }
+  }catch(e){
+    fb.style.color='#f87171';fb.textContent='Erro: '+e.message;
+    console.error(e);
+  }
 }
 
 // ─── Events ───────────────────────────────────────────────────────────────────
