@@ -213,7 +213,9 @@ function parseHTML(html, progId){
     if(!pts||!name)return;
     const pm=g.match(/por\s+(\d+)\s+real/i);
     const dollar=/kaligo|hertz|decolar|aliexpress|rental.cars|rentcars|localiza.int/i.test(name);
-    out.push({name,pts,per:pm?+pm[1]:1,ate:!!am,dollar,cat:categorize(name),url:na.href||'#',prog:progId});
+    const rawHref=na.getAttribute("href")||"#";
+    const url=rawHref.startsWith("http")?rawHref:"https://www.comparemania.com.br"+rawHref;
+    out.push({name,pts,per:pm?+pm[1]:1,ate:!!am,dollar,cat:categorize(name),url,prog:progId});
   });
   return out;
 }
