@@ -1,6 +1,28 @@
 {
-  "geradoEm": "2026-06-30T12:50:27.936Z",
+  "geradoEm": "2026-06-30T13:04:28.385Z",
   "items": [
+    {
+      "id": "alcsm8",
+      "titulo": "LATAM Pass oferece 25% de bônus em transferência de pontos Livelo",
+      "emoji": "✈️",
+      "resumo": "O LATAM Pass está com uma promoção relâmpago oferecendo 25% de milhas bônus nas transferências de pontos Livelo, válida apenas por um dia. Além disso, quem faz a primeira transferência ganha 1.000 milhas extras, com um mínimo de 12.000 pontos Livelo necessários para participar.",
+      "programa": "LATAM Pass e Livelo",
+      "bonus": "25% de milhas bônus + 1.000 milhas extras na primeira transferência (limite de 100.000 milhas extras por participante)",
+      "prazo": "30 de junho de 2026",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Válida apenas no dia 30 de junho de 2026",
+        "Transferência mínima de 12.000 pontos Livelo obrigatória",
+        "Limite de bonificação de 100.000 milhas extras por participante",
+        "É necessário realizar cadastro prévio na campanha com CPF",
+        "Milhas extras são creditadas em até 30 dias após encerramento da campanha",
+        "Milhas transferidas têm validade de 36 meses, exceto para clientes elite",
+        "Oferta não é cumulativa com milhas extras dos planos do Clube LATAM Pass",
+        "A transferência deve ser realizada entre contas de mesma titularidade",
+        "LATAM não se responsabiliza por erros durante o processo de cadastro"
+      ],
+      "publicadoEm": "2026-06-30T13:01:49.000Z"
+    },
     {
       "id": "1mv4wmx",
       "titulo": "4 promoções de transferência de pontos com bônus disponíveis",
@@ -178,6 +200,157 @@
         "Recomenda-se fazer gravação de tela durante o cadastro, pois a LATAM não se responsabiliza por erros no processo"
       ],
       "publicadoEm": "2026-06-23T14:12:37.000Z"
+    },
+    {
+      "id": "7uk49j",
+      "titulo": "LATAM Pass: 25% de bônus em transferências Livelo + 1 mil milhas",
+      "emoji": "🎁",
+      "resumo": "Promoção relâmpago do LATAM Pass oferece 25% de bônus nas transferências de pontos Livelo, válida apenas hoje. Clientes que realizam a primeira transferência ganham 1 mil milhas extras adicionais, tornando a operação ainda mais vantajosa para quem deseja acumular milhas rapidamente.",
+      "programa": "LATAM Pass e Livelo",
+      "bonus": "25% de bônus em milhas + 1.000 milhas bônus na primeira transferência",
+      "prazo": "22 de junho de 2026 (hoje)",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Válida apenas no dia 22 de junho de 2026",
+        "Transferência mínima de 12.000 pontos Livelo obrigatória",
+        "Limite de 300.000 milhas extras por participante durante toda a campanha",
+        "Necessário cadastro prévio no site da campanha com CPF",
+        "Milhas transferidas têm validade de 36 meses, exceto para clientes elite",
+        "Bonificação não é cumulativa com ofertas do Clube LATAM Pass",
+        "Crédito das milhas extras ocorre em até 30 dias após encerramento da campanha",
+        "Transferência deve ser entre contas de mesma titularidade",
+        "LATAM não se responsabiliza por erros durante o cadastro"
+      ],
+      "publicadoEm": "2026-06-22T23:00:34.000Z"
+    },
+    {
+      "id": "1uyzf3u",
+      "titulo": "Smiles oferece até 70% de bônus em transferências do BB Empresas",
+      "emoji": "🎁",
+      "resumo": "A Smiles está bonificando transferências de pontos do programa de benefícios BB Empresas com até 70% de bônus adicional. Assinantes do Clube Smiles e clientes Diamante recebem o bônus máximo, enquanto demais clientes ganham 40%. A promoção é válida até 23 de junho de 2026.",
+      "programa": "Smiles e BB Empresas",
+      "bonus": "Até 70% de bônus (clientes Clube Smiles e Diamante); 40% de bônus (demais clientes)",
+      "prazo": "23 de junho de 2026 para realização das transferências; crédito das milhas até 7 de julho de 2026",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Cadastro obrigatório na página exclusiva da campanha",
+        "Limite máximo de 300 mil milhas bônus por CPF ou conta família",
+        "Assinantes do Clube Smiles precisam estar com assinatura ativa antes de fazer a transferência",
+        "Milhas bônus serão creditadas até 7 de julho de 2026 e terão validade de 12 meses",
+        "Recomenda-se fotografar a tela de confirmação, pois a Smiles não se responsabiliza por erros no cadastro"
+      ],
+      "publicadoEm": "2026-06-22T18:30:03.000Z"
+    },
+    {
+      "id": "1753tfg",
+      "titulo": "Esfera oferece até 55% de bônus em transferências para ConnectMiles",
+      "emoji": "🎁",
+      "resumo": "A plataforma Esfera está bonificando transferências de pontos para o programa ConnectMiles da Copa Airlines com até 55% de bônus adicional. A promoção é válida até 25 de junho de 2026 e oferece diferentes percentuais conforme o tipo de cliente, representando uma oportunidade interessante para quem deseja enviar pontos para a aliança Star Alliance.",
+      "programa": "Esfera e ConnectMiles (Copa Airlines)",
+      "bonus": "Até 55% de bônus em milhas (55% para assinantes do Clube Esfera, 40% para demais clientes)",
+      "prazo": "25 de junho de 2026 ou até atingir o limite de estoque",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Assinantes do Clube Esfera recebem 55% de bônus; demais clientes recebem 40%",
+        "Conversão base: 3 pontos Esfera = 1 milha ConnectMiles",
+        "Mínimo de 30.000 pontos Esfera para clientes sem Clube Esfera (valor reduzido para assinantes)",
+        "Bônus limitado a 500.000 milhas por CPF",
+        "O Clube Esfera deve permanecer ativo durante toda a promoção",
+        "Transferências válidas apenas entre contas de mesma titularidade",
+        "Milhas transferidas creditadas em até 3 dias úteis",
+        "Milhas de bônus creditadas em até 30 dias corridos após término da promoção",
+        "Milhas de bônus têm validade de 24 meses a partir do crédito",
+        "Programa ConnectMiles alterou tabela de resgates recentemente sem aviso prévio"
+      ],
+      "publicadoEm": "2026-06-22T16:00:59.000Z"
+    },
+    {
+      "id": "qt4btj",
+      "titulo": "Transfira pontos Esfera para Azul com até 90% de bônus",
+      "emoji": "💰",
+      "resumo": "O programa Azul Fidelidade oferece até 90% de bônus nas transferências de pontos Esfera, com possibilidade de adicionar até 30% extra para assinantes do Clube Azul conforme tempo de adesão. Na modalidade pontos + dinheiro, é possível adquirir mil pontos Azul a partir de R$ 12,08, com parcelamento em até 12 vezes sem juros.",
+      "programa": "Azul Fidelidade e Esfera",
+      "bonus": "Até 90% de bônus na transferência + até 30% adicional por tempo de Clube Azul (máximo 300.000 pontos bônus por CPF ao ano)",
+      "prazo": "Válido até 26 de junho de 2026 para a promoção principal; modalidade pontos + dinheiro por tempo indeterminado",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Válido apenas para assinantes do Clube Esfera",
+        "Bônus escalonado: 60% para até 20.000 pontos, 70% para 20.001 a 50.000, 80% para acima de 50.001",
+        "Bônus adicional por tempo de clube: +5% (6+ meses), +10% (1-2 anos), +20% (3-4 anos), +30% (5+ anos), limitado a 100.000 pontos por ano",
+        "Limite máximo de 300.000 pontos bônus por CPF considerando todas as transferências",
+        "Na modalidade pontos + dinheiro, é necessário ter 1% de pontos Esfera da quantidade total transferida",
+        "Parcelamento em até 12 vezes sem juros nas bandeiras Elo, Visa, Amex e Mastercard",
+        "Custo por mil pontos Azul varia de acordo com quantidade de pontos comprada e bônus aplicáveis"
+      ],
+      "publicadoEm": "2026-06-22T13:42:32.000Z"
+    },
+    {
+      "id": "hfc2v1",
+      "titulo": "Transfira pontos Livelo para LATAM Pass a partir de R$ 23,28 por milha",
+      "emoji": "✈️",
+      "resumo": "A Livelo oferece uma oportunidade atrativa para transferir pontos ao LATAM Pass na modalidade pontos + dinheiro, com custo de R$ 23,28 por milha ao aproveitar o bônus de 25% e desconto Pix. A transferência pode ser parcelada em até 6x sem juros, tornando a compra de milhas mais acessível.",
+      "programa": "Livelo e LATAM Pass",
+      "bonus": "25% de bônus em pontos LATAM Pass (válido apenas para clientes LATAM Pass) + 1.000 milhas bônus na primeira transferência",
+      "prazo": "22/06/2026 (bônus de 25% válido apenas este dia); modalidade pontos + dinheiro válida por tempo indeterminado",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Bônus de 25% válido apenas para clientes LATAM Pass",
+        "Bônus de 25% válido apenas no dia 22/06/2026",
+        "Transferência mínima de 12.000 pontos para receber bônus e milhas adicionais",
+        "Necessário ter no mínimo 1% de pontos Livelo em relação à quantidade total transferida",
+        "Desconto de 5% com Pix reduz o custo para R$ 29,07 por milha (antes de aplicar bônus)",
+        "Parcelamento em até 6x sem juros disponível apenas nas bandeiras Elo, Visa, Amex e Mastercard",
+        "Modalidade pontos + dinheiro válida apenas para assinantes do Clube Livelo",
+        "Custo por milha (CPM) varia conforme quantidade de pontos transferida",
+        "O cálculo apresentado é exemplificativo; confirmar valores antes de concluir a transferência"
+      ],
+      "publicadoEm": "2026-06-22T13:24:41.000Z"
+    },
+    {
+      "id": "alcsld",
+      "titulo": "LATAM Pass oferece 25% de bônus em transferência de pontos Livelo",
+      "emoji": "✈️",
+      "resumo": "O programa LATAM Pass está oferecendo 25% de milhas bônus para quem transferir pontos da Livelo, com até 1.000 milhas extras adicionais para primeira transferência. A promoção é válida apenas no dia 22 de junho e requer transferência mínima de 12.000 pontos.",
+      "programa": "LATAM Pass e Livelo",
+      "bonus": "25% de milhas bônus + 1.000 milhas bônus para primeira transferência",
+      "prazo": "22 de junho de 2026",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Válida apenas no dia 22 de junho de 2026",
+        "Transferência mínima de 12.000 pontos Livelo necessária",
+        "Limite de 300.000 milhas extras por participante",
+        "Cadastro obrigatório via site da campanha",
+        "Milhas transferidas têm validade de 36 meses (clientes elite sem validade)",
+        "Milhas extras creditadas em até 30 dias após término da campanha",
+        "Não cumulativa com ofertas do Clube LATAM Pass",
+        "Milhas só podem ser transferidas para conta LATAM Pass da mesma titularidade",
+        "Promoção não responsabiliza LATAM por erros no momento do cadastro"
+      ],
+      "publicadoEm": "2026-06-22T13:00:30.000Z"
+    },
+    {
+      "id": "1xrey3h",
+      "titulo": "Azul Fidelidade: até 90% de bônus em transferências de pontos",
+      "emoji": "✈️",
+      "resumo": "Azul Fidelidade oferece bônus progressivo de até 90% nas transferências de pontos, com até 30% adicionais para assinantes do Clube Azul conforme tempo de adesão. A promoção é válida até 26 de junho de 2026 e contempla parceiros como Livelo e Esfera.",
+      "programa": "Azul Fidelidade",
+      "bonus": "60% a 90% de bônus base + até 30% adicional para assinantes Clube Azul (conforme tempo de adesão)",
+      "prazo": "26 de junho de 2026",
+      "categoria": "transferencia",
+      "restricoes": [
+        "Bônus progressivo: 60% para transferências até 20.000 pontos, 70% de 20.001 a 50.000 pontos, 80% acima de 50.001 pontos",
+        "Assinantes Clube Azul recebem +10% de bônus na transferência (totalizando 70%, 80% ou 90%)",
+        "Bônus adicional por tempo de Clube Azul: +5% (6+ meses), +10% (1-2 anos), +20% (3-4 anos), +30% (5+ anos)",
+        "Limite máximo de 300.000 pontos bônus por CPF",
+        "Bônus adicional por tempo de clube limitado a 100.000 pontos por ano",
+        "Pontos bônus creditados em até 15 dias úteis após término da campanha",
+        "Validade dos pontos bônus de 6 meses para clientes padrão; sem expiração para Clube Azul 10.000/20.000 ou Azul Itaú Visa Infinite",
+        "Oferta não cumulativa com outras promoções",
+        "Válido para todos os bancos e parceiros financeiros, exceto cartões Porto Bank",
+        "Cadastro obrigatório na página da promoção antes da transferência",
+        "Assinantes que não possuem Clube Azul devem se inscrever antes da transferência para receber o bônus de 90%"
+      ],
+      "publicadoEm": "2026-06-22T12:42:53.000Z"
     }
   ]
 }
