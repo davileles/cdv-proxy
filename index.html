@@ -233,6 +233,18 @@
   </div>
 </div>
 
+<!-- MODAL OFERTA -->
+<div class="modal-overlay" id="oferta-modal-overlay">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" id="oferta-modal-close-btn">×</button>
+    <div id="oferta-modal-cat" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"></div>
+    <div id="oferta-modal-titulo" style="font-size:19px;font-weight:800;line-height:1.3;margin-bottom:16px"></div>
+    <div id="oferta-modal-badges" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div id="oferta-modal-resumo" style="font-size:14px;color:var(--text);line-height:1.7;background:var(--card);border-radius:10px;padding:16px"></div>
+    <div id="oferta-modal-date" style="font-size:11px;color:var(--muted2);margin-top:14px;text-align:right"></div>
+  </div>
+</div>
+
 <script>
 const PROXY = 'https://cdv-proxy-production.up.railway.app/fetch';
 // Alertas salvos via proxy Railway (token fica seguro no servidor)
@@ -555,34 +567,63 @@ function renderOfertas(){
     ${filtrados.length===0
       ? `<div style="text-align:center;color:var(--muted);padding:48px 0;font-size:14px">
            Nenhuma oferta encontrada.<br>
-           <span style="font-size:12px;color:var(--muted2)">O GitHub Action coleta automaticamente de 2 em 2 horas.</span>
+           <span style="font-size:12px;color:var(--muted2)">Novas ofertas são adicionadas automaticamente ao longo do dia.</span>
          </div>`
       : `<div class="oferta-grid">
-           ${filtrados.map(oferta=>{
+           ${filtrados.map((oferta,idx)=>{
              const cor=CAT_COLORS[oferta.cat]||'var(--cdv-coral)';
              const data=new Date(oferta.date).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-             return `<a class="oferta-card" href="${oferta.link}" target="_blank">
+             return `<div class="oferta-card" data-oferta-idx="${idx}" data-oferta-cat="${oferta.cat}" style="cursor:pointer">
                <div class="oferta-card-top">
                  <div class="oferta-cat">
                    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${cor}"></span>
                    ${oferta.catEmoji} ${oferta.catLabel}
                  </div>
-                 <div class="oferta-titulo">${oferta.title}</div>
-                 ${oferta.desc?`<div class="oferta-desc">${oferta.desc.slice(0,150)}…</div>`:''}
+                 <div class="oferta-titulo">${oferta.titulo}</div>
+                 ${oferta.resumo?`<div class="oferta-desc">${oferta.resumo.slice(0,150)}${oferta.resumo.length>150?'…':''}</div>`:''}
                </div>
                <div class="oferta-card-foot">
                  <span>${data}</span>
-                 <span class="oferta-link">Ler oferta ↗</span>
+                 <span class="oferta-link">Ver detalhes</span>
                </div>
-             </a>`;
+             </div>`;
            }).join('')}
          </div>`
     }`;
+
+  // Guarda referência para o modal
+  window._filtradosAtuais = filtrados;
 }
 
 function filtrarCatOferta(cat){
   ofertaCatFiltro=cat;
   renderOfertas();
+}
+
+function openOfertaModal(idx){
+  const oferta=window._filtradosAtuais?.[idx];
+  if(!oferta) return;
+
+  const cor=CAT_COLORS[oferta.cat]||'var(--cdv-coral)';
+  document.getElementById('oferta-modal-cat').innerHTML=
+    `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${cor}"></span> ${oferta.catEmoji} ${oferta.catLabel}`;
+  document.getElementById('oferta-modal-titulo').textContent=oferta.titulo;
+  document.getElementById('oferta-modal-resumo').textContent=oferta.resumo||'Detalhes não disponíveis.';
+
+  const badges=[];
+  if(oferta.programa) badges.push(`<span class="pbdg" style="background:${cor}22;color:${cor};border:1px solid ${cor}55">${oferta.programa}</span>`);
+  if(oferta.bonus) badges.push(`<span class="pbdg" style="background:rgba(52,211,153,.15);color:#34d399;border:1px solid rgba(52,211,153,.4)">+${oferta.bonus.replace(/^\+/,'')} bônus</span>`);
+  if(oferta.prazo) badges.push(`<span class="pbdg" style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.4)">⏰ ${oferta.prazo}</span>`);
+  document.getElementById('oferta-modal-badges').innerHTML=badges.join('');
+
+  const data=new Date(oferta.date).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('oferta-modal-date').textContent=`Publicado em ${data}`;
+
+  document.getElementById('oferta-modal-overlay').classList.add('open');
+}
+
+function closeOfertaModal(){
+  document.getElementById('oferta-modal-overlay').classList.remove('open');
 }
 
 async function loadData(){
@@ -988,6 +1029,11 @@ async function salvarAlerta(){
 // ─── Events ───────────────────────────────────────────────────────────────────
 // Event listeners separados por contexto para evitar conflitos
 // 1. Modal overlay — fecha ao clicar fora
+document.getElementById('oferta-modal-overlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('oferta-modal-overlay')) closeOfertaModal();
+});
+document.getElementById('oferta-modal-close-btn').addEventListener('click', closeOfertaModal);
+
 document.getElementById('modal-overlay').addEventListener('click', e=>{
   if(e.target===document.getElementById('modal-overlay')) closeModal();
 });
@@ -1016,6 +1062,8 @@ document.addEventListener('click',e=>{
   if(cb){activeCat=(activeCat===cb.dataset.cat&&cb.dataset.cat!=='all')?'all':cb.dataset.cat;render();return;}
   const card=e.target.closest('.card[data-name]');
   if(card){openModal(decodeURIComponent(card.dataset.name));}
+  const ofertaCard=e.target.closest('.oferta-card[data-oferta-idx]');
+  if(ofertaCard){openOfertaModal(parseInt(ofertaCard.dataset.ofertaIdx));}
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
