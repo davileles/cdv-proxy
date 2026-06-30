@@ -87,10 +87,19 @@ async function fetchProg(prog) {
   console.log(`Consultando ${prog.id}...`);
   const url = `${PROXY}?url=${encodeURIComponent(prog.url)}`;
   const html = await httpGet(url);
-  if (!html.includes('ponto(s)') && !html.includes('Smiles') && !html.includes('pt/R$')) {
-    throw new Error(`${prog.id}: resposta inesperada`);
+  // Checagem de sanidade: aceita formatos antigos e o formato atual da Comparemania
+  // (ex: "R$ 1 = 3 PONTOS"), além de validar que existe uma <table> com linhas.
+  const hasKnownText = html.includes('ponto') || html.includes('PONTOS') || html.includes('pt/R$') || /=\s*\d+\s*PONTOS?/i.test(html);
+  const hasTable = /<table[\s\S]*?<tr/i.test(html);
+  if (!hasKnownText && !hasTable) {
+    const snippet = html.replace(/\s+/g, ' ').trim().slice(0, 200);
+    console.log(`  ⚠️ resposta inesperada (len=${html.length}) — início: "${snippet}"`);
+    throw new Error(`${prog.id}: resposta inesperada (len=${html.length})`);
   }
   const items = parseHTML(html, prog.id);
+  if (items.length === 0) {
+    console.log(`  ⚠️ 0 parceiros encontrados (len=${html.length}) — verifique formato da página`);
+  }
   console.log(`  → ${items.length} parceiros`);
   return items;
 }
