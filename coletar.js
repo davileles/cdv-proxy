@@ -159,6 +159,41 @@ async function fetchFeed(feed) {
   }
 }
 
+// ── Busca o conteúdo completo da página do artigo (não só o resumo do feed) ──
+async function fetchArticleFullText(link) {
+  try {
+    const html = await httpGet(`${PROXY}?url=${encodeURIComponent(link)}`);
+
+    // Tenta isolar o conteúdo do post: WordPress geralmente usa <article>...</article>
+    // ou uma div com classe que contenha "content"/"entry"/"post-content"
+    let bodyHtml =
+      (html.match(/<article[^>]*>([\s\S]*?)<\/article>/i))?.[1] ||
+      (html.match(/<div[^>]+class="[^"]*(?:entry-content|post-content|article-content)[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<\/div>\s*){0,3}<footer/i))?.[1] ||
+      '';
+
+    // Remove blocos claramente irrelevantes antes de extrair texto
+    bodyHtml = bodyHtml
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, ' ')
+      .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+      .replace(/<form[\s\S]*?<\/form>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ');
+
+    if (!bodyHtml) return null;
+
+    const plain = decodeEntities(bodyHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+
+    // Corta qualquer rodapé padrão do site que ainda tenha sobrado (ex: "O post ... apareceu primeiro em")
+    const cortado = plain.split(/\bO post\b.{0,10}apareceu primeiro em/i)[0].trim();
+
+    return cortado.length > 200 ? cortado.slice(0, 12000) : null;
+  } catch(e) {
+    console.log(`  [fetchArticleFullText] falhou para ${link}:`, e.message);
+    return null;
+  }
+}
+
 // ── Reescreve a oferta via IA (Claude Haiku) — conteúdo 100% original ─────────
 async function reescreverOferta(item) {
   if (!ANTHROPIC_API_KEY) {
@@ -186,7 +221,7 @@ Responda SOMENTE em JSON válido, sem markdown, neste formato exato:
   try {
     const payload = JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 2500,
       messages: [{ role:'user', content:prompt }]
     });
 
@@ -326,9 +361,18 @@ async function main() {
     console.log(`Descartando ${ofertas.items.length - itemsValidos.length} item(ns) em formato antigo`);
   }
 
-  console.log(`${candidatosNovos.length} artigo(s) novo(s) — reescrevendo com IA...`);
+  console.log(`${candidatosNovos.length} artigo(s) novo(s) — buscando conteúdo completo e reescrevendo com IA...`);
   const novosProcessados = [];
   for (const item of candidatosNovos) {
+    console.log(`  Acessando página: ${item.link}`);
+    const fullText = await fetchArticleFullText(item.link);
+    if (fullText) {
+      console.log(`    → conteúdo completo extraído (${fullText.length} chars)`);
+      item.rawText = fullText;
+    } else {
+      console.log(`    → falhou, usando resumo do feed (${item.rawText.length} chars)`);
+    }
+
     const reescrito = await reescreverOferta(item);
     novosProcessados.push({
       id: item.id,
