@@ -20,10 +20,11 @@ const OUT_FILE = path.join(__dirname, 'ofertas.json');
 // IMPORTANTE: a fonte nunca é exibida no painel nem mencionada nos textos
 // gerados pela IA — esses valores ficam só aqui, internos ao coletor.
 const FEEDS = [
-  { categoria: 'transferencia', url: 'https://passageirodeprimeira.com/categorias/promocoes/transferencia-de-pontos/feed/' },
-  { categoria: 'compra',        url: 'https://passageirodeprimeira.com/categorias/promocoes/compra-de-pontos/feed/' },
-  { categoria: 'clube',         url: 'https://passageirodeprimeira.com/categorias/promocoes/clube-de-pontos/feed/' },
-  { categoria: 'cartao',        url: 'https://passageirodeprimeira.com/categorias/promocoes/bancos-e-cartoes/feed/' },
+  { categoria: 'transferencia',     url: 'https://passageirodeprimeira.com/categorias/promocoes/transferencia-de-pontos/feed/' },
+  { categoria: 'compra',            url: 'https://passageirodeprimeira.com/categorias/promocoes/compra-de-pontos/feed/' },
+  { categoria: 'compra_bonificada', url: 'https://passageirodeprimeira.com/categorias/promocoes/compre-e-pontue/feed/' },
+  { categoria: 'clube',             url: 'https://passageirodeprimeira.com/categorias/promocoes/clube-de-pontos/feed/' },
+  { categoria: 'cartao',            url: 'https://passageirodeprimeira.com/categorias/promocoes/bancos-e-cartoes/feed/' },
 ];
 
 const MAX_ITEMS_GUARDADOS = 60;      // mantém no máximo N ofertas no JSON final
@@ -110,29 +111,153 @@ function extractArticleText(html) {
 }
 
 // ── Chamada à API Anthropic para reescrever a notícia ─────────────────────────
-async function reescreverComIA(titulo, textoArtigo) {
-  const systemPrompt = `Você é um redator que escreve posts originais e independentes sobre promoções e oportunidades do mercado de pontos e milhas no Brasil (transferências bonificadas, compra de pontos, clubes de fidelidade, cartões de crédito).
+// ── Extrai candidatos a "link da oferta" a partir dos <a href> do HTML bruto ──
+// Procura âncoras com texto típico de CTA (clique aqui, acesse, confira, etc.)
+// e também qualquer link que aponte para fora do próprio site da matéria.
+const CTA_TEXT_RE = /clique aqui|acesse|confira|participar|saiba mais|ver oferta|garanta|aproveite|inscreva-se|assine|compre|transferir|cadastr/i;
 
-REGRAS OBRIGATÓRIAS:
+function stripUtm(url) {
+  try {
+    const u = new URL(url);
+    [...u.searchParams.keys()].forEach((k) => {
+      if (/^utm_/i.test(k)) u.searchParams.delete(k);
+    });
+    return u.toString();
+  } catch (e) {
+    return url;
+  }
+}
+
+function extractLinkCandidates(html) {
+  const anchors = html.match(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi) || [];
+  const candidatos = [];
+  const vistos = new Set();
+  for (const a of anchors) {
+    const m = a.match(/href="([^"]+)"/i);
+    if (!m) continue;
+    let href = m[1];
+    if (!/^https?:\/\//i.test(href)) continue;
+    if (href.includes('passageirodeprimeira.com')) continue; // nunca o próprio site
+    if (/facebook\.com|instagram\.com|whatsapp\.com|t\.me|twitter\.com|x\.com|tiktok\.com|youtube\.com|threads\.com|wp-content|cdn-cgi|cookiedatabase/i.test(href)) continue;
+    href = stripUtm(href);
+    if (vistos.has(href)) continue;
+    vistos.add(href);
+    const texto = stripTags(a).trim();
+    candidatos.push({ href, texto, ctaProvavel: CTA_TEXT_RE.test(texto) });
+  }
+  // CTAs prováveis primeiro, depois os demais — máximo 12 para não pesar o prompt
+  candidatos.sort((a, b) => (b.ctaProvavel ? 1 : 0) - (a.ctaProvavel ? 1 : 0));
+  return candidatos.slice(0, 12);
+}
+
+// ── Tabela de fallback: link oficial por programa quando a IA não acha um link confiável ──
+const FALLBACK_LINKS = [
+  [/clube\s*livelo/i, 'https://www.livelo.com.br/clube'],
+  [/livelo.*compra|compra.*livelo/i, 'https://www.livelo.com.br/compre-pontos'],
+  [/livelo/i, 'https://www.livelo.com.br'],
+  [/clube\s*smiles/i, 'https://www.smiles.com.br/clube-smiles/beneficios-clube'],
+  [/smiles/i, 'https://www.smiles.com.br/home'],
+  [/clube\s*latam/i, 'https://latampass.latam.com/pt_br/clube'],
+  [/latam/i, 'https://www.latamairlines.com/br/pt'],
+  [/clube\s*azul|azul\s*fidelidade.*clube/i, 'https://www.voeazul.com.br/br/pt/voeazul/clube-azul'],
+  [/azul\s*pelo\s*mundo/i, 'https://azulpelomundo.voeazul.com.br'],
+  [/azul/i, 'https://www.voeazul.com.br/br/pt/home'],
+  [/clube\s*esfera/i, 'https://www.esfera.com.vc/clube'],
+  [/esfera/i, 'https://www.esfera.com.vc'],
+  [/hoteis\.com|hotéis\.com/i, 'https://www.hoteis.com'],
+  [/magalu|magazine\s*luiza/i, 'https://www.magazineluiza.com.br'],
+  [/iberia/i, 'https://www.iberia.com'],
+  [/suma|air\s*europa/i, 'https://www.aireuropa.com/en/flights/home'],
+  [/aadvantage|american\s*airlines/i, 'https://www.aa.com.br'],
+  [/\btap\b/i, 'https://www.flytap.com'],
+];
+
+function resolverLinkFallback(programa, loja) {
+  const alvo = `${programa || ''} ${loja || ''}`;
+  for (const [re, url] of FALLBACK_LINKS) {
+    if (re.test(alvo)) return url;
+  }
+  return '';
+}
+
+function linkValido(link) {
+  return !!link && /^https?:\/\//i.test(link) && !link.includes('passageirodeprimeira.com');
+}
+
+const TEXTO_IMPORTANTE_COMPRA_BONIFICADA =
+  'Sempre verifique a necessidade de uso de cupom, formas de pagamento e produtos específicos participantes, além do prazo para receber os pontos. ' +
+  'Recomendamos fortemente que todo processo seja gravado para possível reclamação futura. Sem a gravação você não obterá os pontos se eles não forem creditados corretamente.';
+
+async function reescreverComIA(titulo, textoArtigo, categoriaFeed, linkCandidatos) {
+  const systemPrompt = `Você é um redator que escreve posts originais e independentes sobre promoções e oportunidades do mercado de pontos e milhas no Brasil (transferências bonificadas, compra de pontos, compras bonificadas em parceiros, clubes de fidelidade, cartões de crédito).
+
+REGRAS GERAIS OBRIGATÓRIAS:
 - NUNCA mencione, cite ou faça referência a qualquer site, blog, veículo de imprensa ou nome de fonte. O texto deve parecer 100% autoral, como se você tivesse apurado a informação diretamente.
 - NUNCA copie frases literais do texto de origem — reescreva tudo com suas próprias palavras.
-- Extraia e estruture os dados objetivos: bônus/percentual, prazo final, programa(s) envolvido(s), condições e restrições.
-- Se alguma informação não estiver clara no texto de origem, use "não informado" — nunca invente dados.
+- Se alguma informação não estiver clara no texto de origem, use "não informado" (ou string vazia "" para campos que pedem isso) — nunca invente dados.
 - Retorne APENAS um JSON válido, sem texto antes ou depois, sem blocos de código markdown.
+- categoria deve ser uma destas: transferencia, compra, compra_bonificada, clube, cartao, geral.
+  • "compra_bonificada" = oferta em que a pessoa GANHA pontos/milhas por real ou dólar gasto em um parceiro/loja (ex: "5 pontos por real gasto na Loja X").
+  • "compra" = compra direta de pontos/milhas com dinheiro (ex: desconto na compra de milhas).
+  • "transferencia" = transferência de pontos entre programas com bônus.
 
-Formato exato de saída:
+REGRAS POR CATEGORIA:
+
+[compra_bonificada]
+- "titulo" DEVE seguir exatamente este template: "[X] pontos por [real/dólar] entre [Parceiro] e [Programa]". Use "Até [X] pontos..." SOMENTE se houver variação de pontuação por perfil/categoria/produto.
+- "resumo" e "restricoes": extraia fielmente o que está no texto de origem. Em "restricoes", liste cada quebra de pontuação por perfil, categoria de produto, condição, cupom necessário e prazo específico de cada condição — cada item começando com hífen, um item por condição.
+- "loja": nome do parceiro/e-commerce onde a compra é feita.
+- "cupom": código do cupom principal necessário, se houver; senão "".
+- "importante": deixe como "" (este texto é adicionado automaticamente pelo sistema, não o escreva).
+- "milheiro": deixe como "" (não se aplica a esta categoria).
+
+[compra] e [transferencia]
+- "resumo" e "restricoes": extraia fielmente, com quebras de pontuação por perfil/categoria/condição/cupom/prazo específico, cada item em "restricoes" como hífen.
+- SEMPRE calcule o custo do milheiro (custo de 1.000 pontos recebidos) quando houver valor pago e quantidade de pontos recebidos no texto.
+  Fórmula: CUSTO_MILHEIRO = (VALOR_TOTAL_PAGO / PONTOS_RECEBIDOS) * 1000, arredondado para 2 casas decimais.
+  Exemplo: pagar R$ 885,60 por 32.000 pontos = R$ 27,65 por 1.000 pontos.
+  Preencha o campo "milheiro" EXATAMENTE no formato: "💰 Custo do milheiro: R$ XX,XX por 1.000 pontos".
+  Se houver mais de um cenário (perfil/quantidade diferentes), calcule para cada um e liste todos no campo "milheiro" separados por quebra de linha (\\n), cada um no mesmo formato.
+  Se não for possível calcular (faltam valor pago ou pontos recebidos), deixe "milheiro" como "".
+- "loja" e "cupom": deixe como "" (não se aplicam, exceto se houver cupom de desconto na compra — nesse caso preencha "cupom").
+- "importante": deixe como "".
+
+[clube] e [cartao] e [geral]
+- "resumo" e "restricoes" normalmente, sem regras especiais de título.
+- "loja", "cupom", "milheiro", "importante": deixe "" a menos que claramente aplicável (ex: cupom de assinatura).
+
+REGRA DE PRAZO (todas as categorias):
+- "prazo" = data de ENCERRAMENTO da campanha/promoção em si.
+- NUNCA use prazo de check-in/check-out de hotel, validade de pontos recebidos, ou prazo de crédito dos pontos — essas informações vão em "restricoes", não em "prazo".
+- Se não houver prazo explícito de encerramento da campanha, deixe "prazo" como "".
+
+REGRA DE LINK DA OFERTA (todas as categorias):
+- "link" deve ser o link OFICIAL da oferta (site do programa de fidelidade, banco, companhia aérea ou loja parceira) — NUNCA um link do site/blog onde a notícia foi publicada.
+- Abaixo estão os links encontrados na página, extraídos de âncoras como "clique aqui", "acesse", "confira", "participar" etc. Escolha o mais apropriado para a oferta descrita. Se nenhum candidato for adequado ou não houver confiança suficiente, deixe "link" como "".
+- NUNCA invente um link que não esteja na lista de candidatos.
+
+Formato exato de saída (todos os campos sempre presentes, mesmo que vazios):
 {
-  "titulo": "título objetivo e direto, sem clickbait, refletindo a oportunidade (máx 80 caracteres)",
-  "emoji": "um único emoji que represente a oferta",
-  "resumo": "2 a 3 frases resumindo a oportunidade e por que ela é relevante",
+  "titulo": "string",
+  "emoji": "um único emoji",
+  "resumo": "2 a 3 frases",
   "programa": "nome do(s) programa(s) de fidelidade envolvido(s)",
-  "bonus": "valor do bônus/ganho de forma objetiva, ex: 'até 100% de bônus' ou 'R$1 = 5 pontos'",
-  "prazo": "data ou período de validade da promoção, ou 'não informado'",
-  "categoria": "uma das opções: transferencia, compra, clube, cartao, geral",
-  "restricoes": ["lista de condições, restrições, elegibilidade e regras importantes, cada item uma frase curta e objetiva"]
+  "bonus": "valor do bônus/ganho de forma objetiva",
+  "prazo": "data de encerramento da campanha, ou \"\"",
+  "categoria": "transferencia | compra | compra_bonificada | clube | cartao | geral",
+  "loja": "string ou \"\"",
+  "cupom": "string ou \"\"",
+  "milheiro": "string ou \"\"",
+  "importante": "",
+  "link": "string ou \"\"",
+  "restricoes": ["item com hífen", "..."]
 }`;
 
-  const userPrompt = `Título original da notícia (apenas para contexto, não usar literalmente): ${titulo}\n\nConteúdo completo extraído da página:\n${textoArtigo}`;
+  const candidatosTxt = linkCandidatos.length
+    ? linkCandidatos.map((c) => `- ${c.href}  (texto do link: "${c.texto}")`).join('\n')
+    : '(nenhum link encontrado na página)';
+
+  const userPrompt = `Categoria do feed de origem (pista, mas reavalie pelo conteúdo): ${categoriaFeed}\n\nTítulo original da notícia (apenas para contexto, não usar literalmente): ${titulo}\n\nConteúdo completo extraído da página:\n${textoArtigo}\n\nCandidatos a link da oferta (escolha um destes para "link", ou deixe "" se nenhum servir):\n${candidatosTxt}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -143,7 +268,7 @@ Formato exato de saída:
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
+      max_tokens: 1400,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     }),
@@ -171,7 +296,7 @@ function idFromLink(link) {
 }
 
 function categorizeFallback(categoriaFeed) {
-  return ['transferencia', 'compra', 'clube', 'cartao'].includes(categoriaFeed) ? categoriaFeed : 'geral';
+  return ['transferencia', 'compra', 'compra_bonificada', 'clube', 'cartao'].includes(categoriaFeed) ? categoriaFeed : 'geral';
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
@@ -218,7 +343,22 @@ async function main() {
         continue;
       }
       console.log(`[Radar] Texto extraído: ${texto.length} chars`);
-      const ia = await reescreverComIA(c.title, texto);
+      const linkCandidatos = extractLinkCandidates(html);
+      const ia = await reescreverComIA(c.title, texto, c.categoriaFeed, linkCandidatos);
+
+      const categoria = ia.categoria || categorizeFallback(c.categoriaFeed);
+      let link = stripUtm((ia.link || '').trim());
+      if (!linkValido(link)) {
+        const fb = resolverLinkFallback(ia.programa, ia.loja);
+        if (fb) {
+          console.log(`[Radar] Link não confiável da IA, usando fallback: ${fb}`);
+          link = fb;
+        } else {
+          console.log(`[Radar] Nenhum link confiável encontrado para "${c.title}".`);
+          link = '';
+        }
+      }
+
       novosItens.push({
         id: c.id,
         titulo: ia.titulo || c.title,
@@ -226,8 +366,13 @@ async function main() {
         resumo: ia.resumo || '',
         programa: ia.programa || '',
         bonus: ia.bonus || '',
-        prazo: ia.prazo || 'não informado',
-        categoria: ia.categoria || categorizeFallback(c.categoriaFeed),
+        prazo: ia.prazo || '',
+        categoria,
+        loja: categoria === 'compra_bonificada' ? (ia.loja || '') : '',
+        cupom: ia.cupom || '',
+        milheiro: ia.milheiro || '',
+        importante: categoria === 'compra_bonificada' ? TEXTO_IMPORTANTE_COMPRA_BONIFICADA : '',
+        link,
         restricoes: Array.isArray(ia.restricoes) ? ia.restricoes : [],
         publicadoEm: c.pubDate ? new Date(c.pubDate).toISOString() : new Date().toISOString(),
       });
