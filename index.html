@@ -180,6 +180,11 @@
   .oferta-modal-restricoes ul{margin:6px 0 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;list-style-position:outside}
   .oferta-modal-restricoes li{font-size:12px;color:var(--muted);line-height:1.4}
   .oferta-importante{margin-top:14px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#fb923c;line-height:1.5}
+
+  .radar-search-wrap{padding:10px 22px 0;background:var(--bg)}
+  .radar-search{background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;width:100%;max-width:320px;outline:none;transition:border-color .2s}
+  .radar-search:focus{border-color:var(--cdv-coral)}
+  .radar-search::placeholder{color:var(--muted)}
   @media(max-width:640px){
     .main-tabs{top:73px;padding:0 10px}
     .main-tab{padding:12px 12px;font-size:12px}
@@ -192,7 +197,7 @@
 
 <header>
   <div class="logo-row">
-    <img class="logo-bird" src="data:image/png;base64,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" alt="Clube do Viajante"/>
+    <img class="logo-bird" src="logocdv.png" onerror="this.style.display='none'" alt="Clube do Viajante"/>
     <div class="brand">
       <span class="brand-name">Clube do Viajante</span>
       <span class="brand-sub">Painel de compras bonificadas</span>
@@ -228,6 +233,7 @@
     <span class="radar-title">Últimas oportunidades de bônus, compra de pontos e cartões</span>
     <button class="refresh-btn" id="radar-refresh-btn" style="background:transparent;border:1px solid rgba(255,88,94,.4);color:var(--cdv-coral)">↻ Atualizar</button>
   </div>
+  <div class="radar-search-wrap"><input type="text" class="radar-search" id="radar-search" placeholder="Buscar oferta…" oninput="renderOfertas()"></div>
   <div class="cat-bar" id="radar-cat-bar"></div>
   <div class="grid" id="radar-grid">
     <div class="status-box"><div class="spinner"></div><div style="color:var(--muted);font-size:13px">Carregando ofertas…</div></div>
@@ -752,7 +758,7 @@ function renderHistChart(partnerName){
   };
 
   const datas = Object.keys(historico).sort();
-  if(datas.length < 2){
+  if(datas.length < 1){
     canvas.style.display='none';
     emptyEl.style.display='block';
     return;
@@ -1013,8 +1019,10 @@ function renderOfertas(){
     grid.innerHTML='<div class="status-box"><div style="font-size:30px">📭</div><div style="color:var(--muted);font-size:13px">Nenhuma oferta no radar no momento.</div></div>';
     return;
   }
+  const radarQ=(document.getElementById('radar-search')?.value||'').toLowerCase().trim();
   let items=ofertasData.items;
   if(radarActiveCat!=='all') items=items.filter(o=>o.categoria===radarActiveCat);
+  if(radarQ) items=items.filter(o=>(o.titulo||'').toLowerCase().includes(radarQ)||(o.resumo||'').toLowerCase().includes(radarQ)||(o.programa||'').toLowerCase().includes(radarQ)||(o.loja||'').toLowerCase().includes(radarQ));
   if(!items.length){
     grid.innerHTML='<div class="status-box"><div style="font-size:30px">🔍</div><div style="color:var(--muted);font-size:13px">Nenhuma oferta nessa categoria.</div></div>';
     return;
