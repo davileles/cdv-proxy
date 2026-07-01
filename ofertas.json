@@ -1,6 +1,33 @@
 {
-  "geradoEm": "2026-07-01T09:16:15.623Z",
+  "geradoEm": "2026-07-01T09:24:14.160Z",
   "items": [
+    {
+      "id": "1rxtpny",
+      "titulo": "40% de bônus na transferência de pontos Livelo para ConnectMiles",
+      "emoji": "🔄",
+      "resumo": "Livelo oferece 40% de bônus para transferências de pontos ao programa ConnectMiles (Copa Airlines) até 30 de junho de 2026. A conversão ocorre na proporção de 3:1 entre Livelo e ConnectMiles, com limite máximo de 400.000 milhas de bônus por CPF. Os pontos creditados têm validade de 24 meses.",
+      "programa": "Livelo e ConnectMiles",
+      "bonus": "40% de bônus em milhas ConnectMiles",
+      "prazo": "30/06/2026",
+      "categoria": "transferencia",
+      "loja": "",
+      "cupom": "",
+      "milheiro": "",
+      "tetoTransferencia": "🎯 Bônus de 40%: transfira até 1.000.000 pontos Livelo para atingir o teto de 400.000 milhas de bônus",
+      "importante": "",
+      "link": "https://www.livelo.com.br/livelo-para-parceiros/copa/CPATransfer",
+      "restricoes": [
+        "Válida para todos os clientes Livelo",
+        "Proporção de conversão 3:1 (3 pontos Livelo = 1 milha ConnectMiles)",
+        "Limite máximo de bônus: 400.000 milhas ConnectMiles por CPF",
+        "Transferência mínima de 3.000 pontos Livelo necessária para receber o bônus",
+        "Pontos creditados em até 30 dias úteis após o término da campanha",
+        "Milhas transferidas têm validade de 24 meses",
+        "Cancelamento de transferência não permitido",
+        "Campanha não cumulativa: bônus creditado uma única vez por CPF"
+      ],
+      "publicadoEm": "2026-06-26T13:59:09.000Z"
+    },
     {
       "id": "ezuy6q",
       "titulo": "Bônus de 25% em transferências Livelo para LATAM Pass",
