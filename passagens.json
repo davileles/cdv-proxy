@@ -1,6 +1,19 @@
 {
-  "atualizadoEm": "2026-07-01T19:35:11.167Z",
+  "atualizadoEm": "2026-07-01T19:35:28.219Z",
   "items": [
+    {
+      "id": "1k5afiu",
+      "origem": "Florianópolis",
+      "destino": "Barcelona",
+      "cia": "LATAM",
+      "programa": "LATAM Pass",
+      "pontos": 76200,
+      "cabine": "Economica",
+      "datas_ida": "Ago/26: 6, 9, 13, 16; Out/26: 28; Nov/26: 1, 4, 8, 10, 11, 12, 17, 19, 20",
+      "datas_volta": "Ago/26: 20, 23; Nov/26: 11, 20, 22, 25, 26, 27",
+      "fonte": "alerta",
+      "enviadoEm": "2026-07-01T19:35:28.219Z"
+    },
     {
       "id": "i2pnym",
       "origem": "Florianópolis",
