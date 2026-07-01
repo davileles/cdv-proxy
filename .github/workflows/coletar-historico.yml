@@ -21,6 +21,7 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.CDV_PAINEL_TOKEN }}
         run: node coletar.js
       - name: Salvar arquivos
         run: |
