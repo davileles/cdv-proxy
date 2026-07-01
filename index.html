@@ -42,7 +42,7 @@
   .fbtn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;white-space:nowrap;transition:all .15s}
   .fbtn:hover{color:var(--text);border-color:var(--cdv-coral)}
   .fbtn.active{background:rgba(255,88,94,.12);border-color:var(--cdv-coral);color:var(--cdv-coral)}
-  select.srt{margin-left:auto;background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;font-family:'Montserrat',sans-serif;cursor:pointer;outline:none}
+  select.srt{background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;font-family:'Montserrat',sans-serif;cursor:pointer;outline:none}
 
   .cat-bar{padding:8px 22px 10px;display:flex;gap:5px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
   .cbtn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .15s}
@@ -133,7 +133,7 @@
     .cat-bar,.stats{padding:8px 14px}
     .grid{padding:14px;gap:9px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
     input[type=text]{width:100%}
-    select.srt{margin-left:0}
+    
     .controls{top:72px}
   }
   /* ── Alertas ── */
@@ -181,8 +181,8 @@
   .oferta-modal-restricoes li{font-size:12px;color:var(--muted);line-height:1.4}
   .oferta-importante{margin-top:14px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#fb923c;line-height:1.5}
 
-  .radar-search-wrap{padding:10px 22px 0;background:var(--bg)}
-  .radar-search{background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;width:100%;max-width:320px;outline:none;transition:border-color .2s}
+  .radar-search-wrap{padding:10px 22px;border-bottom:1px solid var(--border);background:var(--bg);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .radar-search{background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;width:210px;outline:none;transition:border-color .2s}
   .radar-search:focus{border-color:var(--cdv-coral)}
   .radar-search::placeholder{color:var(--muted)}
   @media(max-width:640px){
