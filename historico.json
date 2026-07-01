@@ -424,13 +424,6 @@
         "latam": 3
       }
     },
-    "cea": {
-      "programs": {
-        "livelo": 2,
-        "esfera": 1,
-        "azul": 2
-      }
-    },
     "centauro": {
       "programs": {
         "livelo": 2,
@@ -1512,6 +1505,12 @@
     "café l'or": {
       "programs": {
         "esfera": 1
+      }
+    },
+    "cea": {
+      "programs": {
+        "esfera": 1,
+        "azul": 6
       }
     },
     "central ar": {
