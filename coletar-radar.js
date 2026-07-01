@@ -36,13 +36,21 @@ const MAX_ITEMS_GUARDADOS = 60;      // mantém no máximo N ofertas pendentes n
 const MAX_DIAS_RETENCAO = 21;        // remove ofertas mais antigas que isso
 const MAX_NOVOS_POR_EXECUCAO = 8;    // limite de chamadas de IA por execução (custo/tempo)
 
-// ── HTTP helper via proxy ─────────────────────────────────────────────────────
+// ── HTTP helper — requisição direta (coletor roda no GitHub Actions, sem CORS) ──
 async function fetchViaProxy(url, timeoutMs = 20000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(`${PROXY}?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
-    if (!res.ok) throw new Error(`proxy retornou ${res.status} para ${url}`);
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.7',
+        'Cache-Control': 'no-cache',
+      }
+    });
+    if (!res.ok) throw new Error(`servidor retornou ${res.status} para ${url}`);
     return await res.text();
   } finally {
     clearTimeout(t);
