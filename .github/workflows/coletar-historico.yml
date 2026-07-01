@@ -1,8 +1,10 @@
 name: Coletar histórico de pontuações
 on:
   schedule:
-    - cron: '15 13 * * *'  # 10h15 horário de Brasília (UTC-3)
-  workflow_dispatch:       # permite rodar manualmente
+    - cron: '15 13 * * *'   # 10h15 horário de Brasília (UTC-3)
+    - cron: '0 18 * * *'    # 15h00 horário de Brasília (UTC-3)
+    - cron: '0 23 * * *'    # 20h00 horário de Brasília (UTC-3)
+  workflow_dispatch:
 jobs:
   coletar:
     runs-on: ubuntu-latest
@@ -20,10 +22,10 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node coletar.js
-      - name: Salvar historico.json
+      - name: Salvar arquivos
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add historico.json
-          git diff --staged --quiet || git commit -m "chore: atualiza histórico $(date -u +'%Y-%m-%d')"
+          git add historico.json alertas.json
+          git diff --staged --quiet || git commit -m "chore: atualiza histórico $(date -u +'%Y-%m-%d %H:%M')"
           git push
