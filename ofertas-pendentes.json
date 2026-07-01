@@ -1,36 +1,4 @@
 {
   "geradoEm": "2026-07-01T12:26:46.168Z",
-  "items": [
-    {
-      "id": "nomu76",
-      "titulo": "Até 120% de bônus nas transferências de pontos para o Azul Fidelidade",
-      "emoji": "🔄",
-      "resumo": "O Azul Fidelidade oferece bônus de até 90% nas transferências de pontos de cartões de crédito, com adicional de até 30% para assinantes do Clube Azul conforme tempo de adesão. A promoção é válida até 26 de junho de 2026 e contempla todos os parceiros financeiros, exceto Porto.",
-      "programa": "Azul Fidelidade",
-      "bonus": "Até 120% de bônus total (90% base + até 30% adicional para Clube Azul)",
-      "prazo": "26/06/2026",
-      "categoria": "transferencia",
-      "loja": "",
-      "cupom": "",
-      "milheiro": "",
-      "tetoTransferencia": "🎯 Bônus de 60%: transfira até 500.000 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 70%: transfira até 428.571 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 80%: transfira até 375.000 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 90%: transfira até 333.333 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 100% (90% + 10% Clube Azul): transfira até 300.000 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 110% (80% + 30% Clube Azul 5+ anos): transfira até 272.727 pontos para atingir o teto de 300.000 pontos de bônus\n🎯 Bônus de 120% (90% + 30% Clube Azul 5+ anos): transfira até 250.000 pontos para atingir o teto de 300.000 pontos de bônus",
-      "importante": "",
-      "link": "https://www.voeazul.com.br/br/pt/ofertas/bancos",
-      "restricoes": [
-        "Transferências de até 20.000 pontos: 60% de bônus para não assinantes, 70% para assinantes Clube Azul",
-        "Transferências entre 20.001 e 50.000 pontos: 70% de bônus para não assinantes, 80% para assinantes Clube Azul",
-        "Transferências acima de 50.001 pontos: 80% de bônus para não assinantes, 90% para assinantes Clube Azul",
-        "Bônus adicional por tempo de Clube Azul: +5% (6+ meses), +10% (1-2 anos), +20% (3-4 anos), +30% (5+ anos)",
-        "Bônus adicional por tempo de adesão limitado a 100.000 pontos por ano",
-        "Limite máximo de 300.000 pontos de bônus por CPF durante toda a campanha",
-        "É necessário se cadastrar na página da promoção antes de realizar a transferência",
-        "Pontos bônus creditados em até 15 dias úteis após término da campanha",
-        "Pontos bônus com validade de 6 meses para clientes Azul Fidelidade e Clube Azul até 5.000; pontos não expiram para Clube Azul 10.000 e 20.000 com plano ativo e pagamento em dia, ou para titulares do cartão Azul Itaú Visa Infinite",
-        "Oferta válida para todos os bancos e parceiros financeiros, exceto cartões Porto Bank",
-        "Oferta não cumulativa com outras promoções",
-        "Clientes devem estar vinculados ao Clube Azul antes de enviar os pontos para serem elegíveis ao bônus de 90%"
-      ],
-      "publicadoEm": "2026-06-24T21:00:56.000Z"
-    }
-  ]
+  "items": []
 }
