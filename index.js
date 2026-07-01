@@ -69,7 +69,7 @@ app.post('/alerta', async (req, res) => {
       'Content-Type': 'application/json'
     };
 
-    const getRes = await fetch(apiBase, { headers });
+    const getRes = await fetch(apiBase, { compress: false, headers });
     const getData = await getRes.json();
     const sha = getData.sha;
     const alertas = JSON.parse(Buffer.from(getData.content, 'base64').toString('utf8'));
@@ -85,6 +85,7 @@ app.post('/alerta', async (req, res) => {
 
     // Salva no GitHub
     const putRes = await fetch(apiBase, {
+      compress: false,
       method: 'PUT',
       headers,
       body: JSON.stringify({
@@ -116,7 +117,7 @@ function ghHeaders() {
 
 async function ghGetJson(filePath, fallback) {
   const apiBase = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
-  const res = await fetch(apiBase, { headers: ghHeaders() });
+  const res = await fetch(apiBase, { compress: false, headers: ghHeaders() });
   if (res.status === 404) return { data: fallback, sha: null };
   const data = await res.json();
   if (!res.ok || !data.content) return { data: fallback, sha: null };
@@ -134,7 +135,7 @@ async function ghPutJson(filePath, jsonData, sha, message) {
     content: Buffer.from(JSON.stringify(jsonData, null, 2)).toString('base64'),
   };
   if (sha) body.sha = sha;
-  const res = await fetch(apiBase, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  const res = await fetch(apiBase, { compress: false, method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `Falha ao salvar ${filePath} no GitHub (status ${res.status})`);
