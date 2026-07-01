@@ -255,6 +255,171 @@ async function dispararAlerta(alerta, parceiro, pts) {
   }
 }
 
+
+// ── Nomes dos programas para exibição ────────────────────────────────────────
+const PROG_NAMES = {
+  livelo: 'Livelo',
+  esfera: 'Esfera',
+  smiles: 'Smiles',
+  azul:   'Azul Fidelidade',
+  latam:  'LATAM Pass',
+};
+
+// ── Helpers GitHub API ────────────────────────────────────────────────────────
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const GITHUB_REPO  = 'davileles/painel-cdv';
+
+async function ghGet(filePath, fallback) {
+  if (!GITHUB_TOKEN) return { data: fallback, sha: null };
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+    },
+  });
+  if (res.status === 404) return { data: fallback, sha: null };
+  const data = await res.json();
+  if (!res.ok || !data.content) return { data: fallback, sha: null };
+  try {
+    return { data: JSON.parse(Buffer.from(data.content, 'base64').toString('utf8')), sha: data.sha };
+  } catch (e) {
+    return { data: fallback, sha: data.sha };
+  }
+}
+
+async function ghPut(filePath, jsonData, sha, message) {
+  if (!GITHUB_TOKEN) { console.warn('[Variação] GITHUB_TOKEN não configurado — pulando push.'); return; }
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
+  const body = {
+    message,
+    content: Buffer.from(JSON.stringify(jsonData, null, 2)).toString('base64'),
+  };
+  if (sha) body.sha = sha;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Falha ao salvar ${filePath} (status ${res.status})`);
+  }
+}
+
+// ── Gera ofertas pendentes para variações positivas de pontuação ──────────────
+async function gerarOfertasVariacao(snapshotAtual, historico, hoje) {
+  // Pega a coleta imediatamente anterior (último snapshot diferente de hoje)
+  const datasOrdenadas = Object.keys(historico)
+    .filter(d => d !== hoje)
+    .sort()
+    .reverse();
+
+  if (datasOrdenadas.length === 0) {
+    console.log('[Variação] Sem coleta anterior — pulando comparação.');
+    return;
+  }
+
+  const dataAnterior = datasOrdenadas[0];
+  const snapshotAnterior = historico[dataAnterior];
+  console.log(`[Variação] Comparando com coleta de ${dataAnterior}`);
+
+  // Agrupa variações positivas por programa
+  // { livelo: [ { parceiro, ptsBefore, ptsNow } ], esfera: [...] }
+  const variacoesPorProg = {};
+
+  for (const [parceiro, dadosAtual] of Object.entries(snapshotAtual)) {
+    const dadosAnt = snapshotAnterior[parceiro];
+    if (!dadosAnt) continue; // parceiro novo — não compara
+
+    for (const [progId, ptsNow] of Object.entries(dadosAtual.programs || {})) {
+      const ptsBefore = (dadosAnt.programs || {})[progId];
+      if (!ptsBefore || ptsNow <= ptsBefore) continue; // sem variação positiva
+
+      if (!variacoesPorProg[progId]) variacoesPorProg[progId] = [];
+      variacoesPorProg[progId].push({
+        parceiro: parceiro.charAt(0).toUpperCase() + parceiro.slice(1),
+        ptsBefore,
+        ptsNow,
+        delta: ptsNow - ptsBefore,
+      });
+    }
+  }
+
+  const programasComVariacao = Object.keys(variacoesPorProg);
+  if (programasComVariacao.length === 0) {
+    console.log('[Variação] Nenhuma variação positiva encontrada.');
+    return;
+  }
+
+  console.log(`[Variação] Variações encontradas em ${programasComVariacao.length} programa(s): ${programasComVariacao.join(', ')}`);
+
+  // Lê ofertas-pendentes.json atual
+  const pendentes = await ghGet('ofertas-pendentes.json', { geradoEm: null, items: [] });
+  const itensPendentes = Array.isArray(pendentes.data.items) ? pendentes.data.items : [];
+
+  const novasOfertas = [];
+
+  for (const progId of programasComVariacao) {
+    const progName = PROG_NAMES[progId] || progId;
+    const variacoes = variacoesPorProg[progId].sort((a, b) => b.delta - a.delta);
+    const count = variacoes.length;
+
+    // Gera descrição linha a linha
+    const linhas = variacoes.map(v =>
+      `🛍️ ${v.parceiro} — ${v.ptsBefore} → ${v.ptsNow} pts/R$ (+${v.delta})`
+    ).join('\n');
+
+    const titulo = `${count} parceiro${count > 1 ? 's' : ''} tiveram aumento de pontuação com ${progName}`;
+
+    // ID estável baseado no programa + data + hora
+    const raw = `variacao-${progId}-${new Date().toISOString()}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) hash = (hash * 31 + raw.charCodeAt(i)) >>> 0;
+    const id = 'var_' + hash.toString(36);
+
+    const oferta = {
+      id,
+      titulo,
+      emoji:       '📈',
+      resumo:      `${count} parceiro${count > 1 ? 's' : ''} do programa ${progName} tiveram aumento de pontuação na última atualização do Comparemania.`,
+      descricao:   linhas,
+      programa:    progName,
+      bonus:       '',
+      prazo:       '',
+      categoria:   'compra_bonificada',
+      loja:        progName,
+      cupom:       '',
+      link:        'https://painel.clubedoviajante.com.br',
+      importante:  '',
+      milheiro:    '',
+      tetoTransferencia: '',
+      restricoes:  [],
+      publicadoEm: new Date().toISOString(),
+      tipoVariacao: true,
+    };
+
+    novasOfertas.push(oferta);
+    console.log(`[Variação] Oferta gerada: "${titulo}"`);
+  }
+
+  // Adiciona novas ofertas no início das pendentes
+  const itensMerged = [...novasOfertas, ...itensPendentes];
+
+  await ghPut(
+    'ofertas-pendentes.json',
+    { geradoEm: new Date().toISOString(), items: itensMerged },
+    pendentes.sha,
+    `chore: variações de pontuação ${hoje} (${novasOfertas.length} programa(s))`
+  );
+
+  console.log(`[Variação] ${novasOfertas.length} oferta(s) adicionada(s) às pendentes.`);
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const hoje = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
@@ -339,7 +504,11 @@ async function main() {
   // Salva alertas restantes (sem os que já foram disparados)
   fs.writeFileSync(ALERTAS_FILE, JSON.stringify(alertasRestantes, null, 2));
 
-  // 5. Salva snapshot no histórico (sobrescreve o dia se já existir)
+
+  // 5. Detecta variações positivas e gera ofertas pendentes por programa
+  await gerarOfertasVariacao(snapshot, historico, hoje);
+
+  // 6. Salva snapshot no histórico (sobrescreve o dia se já existir)
   historico[hoje] = snapshot;
 
   // Remove dias com mais de 180 dias (mantém ~6 meses)
