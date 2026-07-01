@@ -223,24 +223,25 @@ app.post('/ofertas/rejeitar', async (req, res) => {
   if (!GITHUB_TOKEN) return res.status(500).json({ ok: false, erro: 'GITHUB_TOKEN não configurado no servidor' });
 
   try {
-    const pend = await ghGetJson(OFERTAS_PENDENTES_PATH, { geradoEm: null, items: [] });
-    const idx = (pend.data.items || []).findIndex((o) => o.id === id);
-    if (idx < 0) return res.status(404).json({ ok: false, erro: 'Oferta não encontrada nas pendentes (pode já ter sido processada)' });
-
-    pend.data.items.splice(idx, 1);
-
+    // 1. Adiciona o ID à lista de rejeitados INDEPENDENTE de estar nas pendentes
     const rej = await ghGetJson(OFERTAS_REJEITADAS_PATH, []);
     const listaRejeitadas = Array.isArray(rej.data) ? rej.data : [];
     if (!listaRejeitadas.includes(id)) listaRejeitadas.push(id);
-    const limitada = listaRejeitadas.slice(-1000); // mantém histórico de até 1000 ids bloqueados
-
+    const limitada = listaRejeitadas.slice(-1000);
     await ghPutJson(OFERTAS_REJEITADAS_PATH, limitada, rej.sha, `chore: bloqueia oferta rejeitada ${id}`);
-    await ghPutJson(
-      OFERTAS_PENDENTES_PATH,
-      { geradoEm: pend.data.geradoEm || new Date().toISOString(), items: pend.data.items },
-      pend.sha,
-      `chore: remove oferta rejeitada ${id} das pendentes`
-    );
+
+    // 2. Remove das pendentes se estiver lá (opcional — não falha se não estiver)
+    const pend = await ghGetJson(OFERTAS_PENDENTES_PATH, { geradoEm: null, items: [] });
+    const idx = (pend.data.items || []).findIndex((o) => o.id === id);
+    if (idx >= 0) {
+      pend.data.items.splice(idx, 1);
+      await ghPutJson(
+        OFERTAS_PENDENTES_PATH,
+        { geradoEm: pend.data.geradoEm || new Date().toISOString(), items: pend.data.items },
+        pend.sha,
+        `chore: remove oferta rejeitada ${id} das pendentes`
+      );
+    }
 
     res.json({ ok: true });
   } catch (err) {
