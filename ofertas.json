@@ -1,6 +1,29 @@
 {
-  "geradoEm": "2026-07-01T14:28:24.253Z",
+  "geradoEm": "2026-07-01T19:16:07.632Z",
   "items": [
+    {
+      "id": "1rf3nvp",
+      "titulo": "Até 15 pontos por real entre Casas Bahia e Azul Fidelidade",
+      "emoji": "🛍️",
+      "resumo": "Azul Fidelidade oferece até 15 pontos por real em compras na Casas Bahia. Assinantes Clube Azul ganham 15 pontos por real, demais clientes ganham 10 pontos por real.",
+      "programa": "Azul Fidelidade",
+      "bonus": "15 pontos por real para assinantes Clube Azul ou 10 pontos por real para demais clientes",
+      "prazo": "05/07/2026",
+      "categoria": "compra_bonificada",
+      "loja": "Casas Bahia",
+      "cupom": "",
+      "milheiro": "",
+      "tetoTransferencia": "",
+      "importante": "Sempre verifique a necessidade de uso de cupom, formas de pagamento e produtos específicos participantes, além do prazo para receber os pontos. Recomendamos fortemente que todo processo seja gravado para possível reclamação futura. Sem a gravação você não obterá os pontos se eles não forem creditados corretamente.",
+      "link": "https://www.casasbahia.com.br/b2b/Azul.aspx",
+      "restricoes": [
+        "Adesão ao Clube Azul deve ter sido feita até 24 horas antes da data de compra para receber pontuação máxima",
+        "Somente produtos vendidos e entregues pela Casas Bahia são válidos para o acúmulo máximo de pontos",
+        "Gift cards acumulam apenas 1 ponto a cada 1 real gasto",
+        "Pontos serão creditados em até 15 dias úteis após a entrega do produto"
+      ],
+      "publicadoEm": "2026-07-01T19:16:07.071Z"
+    },
     {
       "id": "1jkpygt",
       "titulo": "Até 60% de desconto na compra de milhas LATAM Pass",
