@@ -3,7 +3,10 @@
 // 1. Lê feeds RSS de categorias de promoções de milhas/pontos
 // 2. Para cada postagem nova, busca o artigo completo (via proxy) e reescreve
 //    com IA como conteúdo 100% original — sem citar a fonte em nenhum momento
-// 3. Salva o resultado em ofertas.json (lido pela aba "Radar de Ofertas" do painel)
+// 3. Salva o resultado em ofertas-pendentes.json, AGUARDANDO APROVAÇÃO MANUAL
+//    pelo painel "Aprovar Ofertas" (no gerador de mensagens). Só depois de
+//    aprovada a oferta é movida para ofertas.json, que é o arquivo lido pela
+//    aba "Radar de Ofertas" do painel público.
 //
 // Variáveis de ambiente necessárias:
 //   ANTHROPIC_API_KEY  → chave da API Anthropic (Claude)
@@ -15,7 +18,9 @@ const path = require('path');
 
 const PROXY = 'https://cdv-proxy-production.up.railway.app/fetch';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const OUT_FILE = path.join(__dirname, 'ofertas.json');
+const OUT_FILE = path.join(__dirname, 'ofertas-pendentes.json');
+const APROVADAS_FILE = path.join(__dirname, 'ofertas.json');
+const REJEITADAS_FILE = path.join(__dirname, 'ofertas-rejeitadas.json');
 
 // IMPORTANTE: a fonte nunca é exibida no painel nem mencionada nos textos
 // gerados pela IA — esses valores ficam só aqui, internos ao coletor.
@@ -27,7 +32,7 @@ const FEEDS = [
   { categoria: 'cartao',            url: 'https://passageirodeprimeira.com/categorias/promocoes/bancos-e-cartoes/feed/' },
 ];
 
-const MAX_ITEMS_GUARDADOS = 60;      // mantém no máximo N ofertas no JSON final
+const MAX_ITEMS_GUARDADOS = 60;      // mantém no máximo N ofertas pendentes no JSON
 const MAX_DIAS_RETENCAO = 21;        // remove ofertas mais antigas que isso
 const MAX_NOVOS_POR_EXECUCAO = 8;    // limite de chamadas de IA por execução (custo/tempo)
 
@@ -114,7 +119,7 @@ function extractArticleText(html) {
   }
 
   // Limita tamanho para não estourar o contexto da chamada de IA
-  return text.slice(0, 14000);
+  return text.slice(0, 24000);
 }
 
 // ── Chamada à API Anthropic para reescrever a notícia ─────────────────────────
@@ -234,7 +239,7 @@ REGRAS POR CATEGORIA:
 - "importante": deixe como "".
 
 [transferencia] — REGRA ADICIONAL OBRIGATÓRIA DO TETO DE BÔNUS:
-- Transferências bonificadas quase sempre têm um TETO MÁXIMO de bônus (ex: "limite de 300.000 milhas bônus por CPF"). Quando esse teto existir no texto, calcule o VOLUME MÁXIMO de pontos que a pessoa deve transferir para atingir exatamente esse teto, para CADA percentual de bônus aplicável (cada perfil/categoria).
+- Transferências bonificadas quase sempre têm um TETO MÁXIMO de bônus (ex: "limite de 300.000 milhas bônus por CPF"). Essa informação costuma aparecer em seções como "Informações importantes" ou "Regulamento", geralmente perto do FINAL do texto — procure ativamente por palavras como "limite", "máximo", "até X milhas/pontos por CPF" em todo o conteúdo antes de concluir que não há teto. Quando esse teto existir no texto, calcule o VOLUME MÁXIMO de pontos que a pessoa deve transferir para atingir exatamente esse teto, para CADA percentual de bônus aplicável (cada perfil/categoria).
   Fórmula: PONTOS_PARA_ATINGIR_TETO = TETO_DE_BONUS_EM_PONTOS / (PERCENTUAL_DE_BONUS / 100)
   Exemplo: bônus de 80% com teto de 300.000 milhas bônus → transferir até 375.000 pontos (375.000 × 80% = 300.000 milhas de bônus, atingindo o teto). Para o cenário de 50% de bônus com o mesmo teto de 300.000 → transferir até 600.000 pontos.
   Preencha o campo "tetoTransferencia" com uma linha por cenário/perfil, no formato: "🎯 Bônus de [X]% ([perfil, se houver]): transfira até [N] pontos para atingir o teto de [TETO] milhas/pontos de bônus", uma linha por cenário separada por quebra de linha (\\n).
@@ -329,7 +334,24 @@ async function main() {
   if (fs.existsSync(OUT_FILE)) {
     try { atual = JSON.parse(fs.readFileSync(OUT_FILE, 'utf8')); } catch (e) { /* arquivo corrompido, recomeça */ }
   }
-  const existentes = new Map((atual.items || []).map((o) => [o.id, o]));
+
+  let aprovadas = { items: [] };
+  if (fs.existsSync(APROVADAS_FILE)) {
+    try { aprovadas = JSON.parse(fs.readFileSync(APROVADAS_FILE, 'utf8')); } catch (e) { /* ignora */ }
+  }
+
+  let rejeitadas = [];
+  if (fs.existsSync(REJEITADAS_FILE)) {
+    try { rejeitadas = JSON.parse(fs.readFileSync(REJEITADAS_FILE, 'utf8')); } catch (e) { /* ignora */ }
+  }
+  if (!Array.isArray(rejeitadas)) rejeitadas = [];
+
+  // Nunca reprocessar: já pendente, já aprovada, ou rejeitada permanentemente
+  const existentes = new Set([
+    ...(atual.items || []).map((o) => o.id),
+    ...(aprovadas.items || []).map((o) => o.id),
+    ...rejeitadas,
+  ]);
 
   // 1. Coleta todos os feeds e monta lista de candidatos
   const candidatos = [];
@@ -425,7 +447,7 @@ async function main() {
 
   const saida = { geradoEm: new Date().toISOString(), items: todos };
   fs.writeFileSync(OUT_FILE, JSON.stringify(saida, null, 2));
-  console.log(`[Radar] ofertas.json salvo com ${todos.length} itens.`);
+  console.log(`[Radar] ofertas-pendentes.json salvo com ${todos.length} itens aguardando aprovação.`);
 }
 
 main().catch((e) => {
